@@ -1,0 +1,109 @@
+# Application Configuration
+spring:
+  application:
+    name: isdn-management-system
+
+  # MySQL Database Configuration
+  datasource:
+    url: jdbc:mysql://localhost:3306/isdn_db?useSSL=false&serverTimezone=Asia/Colombo&allowPublicKeyRetrieval=true
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    # HikariCP Connection Pool Settings
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: ISDNHikariPool
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update  # Options: none, validate, update, create, create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+
+    show-sql: true  # Show SQL queries in console (disable in production)
+
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true  # Format SQL for readability
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20  # Batch insert/update size
+        order_inserts: true
+        order_updates: true
+
+        # Second-level cache (optional)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+
+    # Database initialization
+    defer-datasource-initialization: true
+
+  # SQL Script Initialization
+  sql:
+    init:
+      mode: always  # Options: always, never, embedded
+      # Uncomment to run schema and data scripts
+      # schema-locations: classpath:schema.sql
+      # data-locations: classpath:data.sql
+      continue-on-error: false
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+# JWT Configuration
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970736638792F423F4528482B4D6251655468576D5A7134743777217A25432A462D
+  expiration: 86400000  # 24 hours in milliseconds (24 * 60 * 60 * 1000)
+  refresh-expiration: 604800000  # 7 days in milliseconds
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.isdn: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/isdn-application.log
+    max-size: 10MB
+    max-history: 30
+
+# Actuator Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
