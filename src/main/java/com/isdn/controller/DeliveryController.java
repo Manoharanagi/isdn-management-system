@@ -3,6 +3,7 @@ package com.isdn.controller;
 import com.isdn.dto.request.AssignDeliveryRequest;
 import com.isdn.dto.request.UpdateDeliveryStatusRequest;
 import com.isdn.dto.response.DeliveryResponse;
+import com.isdn.model.Delivery;
 import com.isdn.service.DeliveryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -144,6 +146,18 @@ public class DeliveryController {
     public ResponseEntity<DeliveryResponse> completeDelivery(@PathVariable Long deliveryId) {
         log.info("PUT /api/deliveries/{}/complete - Complete delivery", deliveryId);
         DeliveryResponse delivery = deliveryService.completeDelivery(deliveryId);
+        return ResponseEntity.ok(delivery);
+    }
+
+    /**
+     *
+     * POST  /api/deliveries/1/proof -Complete delivery with proof
+     */
+    @PostMapping("/{deliveryId}/proof")
+    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
+    public ResponseEntity<DeliveryResponse> completeDeliveryProof(@PathVariable long deliveryId,@RequestParam("file") MultipartFile file){
+      log.info("POST  /api/deliveries/{}/proof - Complete delivery with proof",deliveryId);
+        DeliveryResponse delivery =deliveryService.completeDeliveryProof(deliveryId,file);
         return ResponseEntity.ok(delivery);
     }
 

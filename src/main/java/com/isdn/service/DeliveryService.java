@@ -13,8 +13,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +33,7 @@ public class DeliveryService {
     private final OrderRepository orderRepository;
     private final DriverRepository driverRepository;
 
+    private static final String UPLOAD_DIR = "uploads/delivery-proofs";
     /**
      * Assign delivery to driver
      */
@@ -302,6 +308,53 @@ public class DeliveryService {
 
         log.info("Delivery {} completed", deliveryId);
         return mapToResponse(delivery);
+    }
+    @Transactional
+    public DeliveryResponse completeDeliveryProof(long deliveryId, MultipartFile file){
+        log.info("Completing delivery {}", deliveryId);
+
+          if(file.isEmpty()) {
+              throw new IllegalArgumentException("File is empty");
+          }
+        Delivery delivery= deliveryRepository.findById(deliveryId).orElseThrow(()-> new ResourceNotFoundException("Delivery not found"));
+
+        try{
+            // Create directory if not exists
+            Path uploadPath = Paths.get(UPLOAD_DIR);
+            Files.createDirectories(uploadPath);
+
+            // Unique file name
+            String fileName = "delivery_" + deliveryId + "_" + System.currentTimeMillis()
+                    + "_" + file.getOriginalFilename();
+
+            Path filePath = uploadPath.resolve(fileName);
+
+            // Save file
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Save URL (or relative path) in DB
+            delivery.setDeliveryProofUrl("/" + UPLOAD_DIR + "/" + fileName);
+
+            delivery.setStatus(DeliveryStatus.DELIVERED);
+            delivery.setDeliveryTime(LocalDateTime.now());
+            delivery.getOrder().setStatus(OrderStatus.DELIVERED);
+            delivery.getOrder().setActualDeliveryDate(LocalDateTime.now().toLocalDate());
+
+
+            if(delivery.getDriver() !=null){
+                delivery.getDriver().setStatus(DriverStatus.AVAILABLE);
+                driverRepository.save(delivery.getDriver());
+            }
+
+            deliveryRepository.save(delivery);
+            orderRepository.save(delivery.getOrder());
+
+            log.info("Delivery {} Completed with proof",deliveryId);
+            return mapToResponse(delivery);
+
+        }catch(Exception e){
+           throw  new RuntimeException("Failed to upload file proof",e);
+        }
     }
 
     /**
