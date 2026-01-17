@@ -61,11 +61,20 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
 
+                        // PayHere webhook endpoint - must be public for PayHere to call
+                        .requestMatchers("/api/payments/notify").permitAll()
+
                         // Product endpoints - accessible to all authenticated users
                         .requestMatchers("/api/products/**").authenticated()
 
+                        .requestMatchers("/images/**").permitAll()
+
+
                         // Cart endpoints - CUSTOMER only
                         .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
+
+                        // payment endpoints - CUSTOMER only
+                        .requestMatchers("/api/payments/**").hasRole("CUSTOMER")
 
                         // Order endpoints - CUSTOMER only
                         .requestMatchers("/api/orders/**").hasAnyRole("CUSTOMER", "RDC_STAFF", "LOGISTICS_OFFICER", "HO_MANAGER")
