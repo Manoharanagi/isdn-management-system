@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Invoice</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .message {
+            color: #555;
+            margin-bottom: 25px;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #2980b9;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .order-info h3 {
+            margin: 0 0 10px 0;
+            color: #2980b9;
+            font-size: 16px;
+        }
+        .order-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .attachment-notice {
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .attachment-notice .icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .attachment-notice p {
+            margin: 0;
+            color: #0c5460;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            color: #6c757d;
+            font-size: 13px;
+        }
+        .company-name {
+            font-weight: 600;
+            color: #2980b9;
+        }
+        .social-links {
+            margin-top: 15px;
+        }
+        .social-links a {
+            color: #6c757d;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 13px;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ISDN</h1>
+            <p>Your Order Has Been Confirmed!</p>
+        </div>
+
+        <div class="content">
+            <p class="greeting">Dear <span th:text="${customerName}">Customer</span>,</p>
+
+            <p class="message">
+                Thank you for your order! We are pleased to confirm that your order has been successfully processed.
+                Please find your invoice attached to this email.
+            </p>
+
+            <div class="order-info">
+                <h3>Order Details</h3>
+                <p class="order-number" th:text="'#' + ${orderNumber}">Order Number</p>
+            </div>
+
+            <div class="attachment-notice">
+                <div class="icon">&#128196;</div>
+                <p><strong>Your invoice is attached to this email as a PDF file.</strong></p>
+                <p>Please keep it for your records.</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <p class="message">
+                If you have any questions about your order, please don't hesitate to contact our customer support team.
+                We're here to help!
+            </p>
+
+            <p class="message">
+                <strong>What's Next?</strong><br>
+                Our team will prepare your order for delivery. You will receive another notification when your order is out for delivery.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p class="company-name">ISDN Plastics</p>
+            <p>Quality Plastic Products for Your Business</p>
+            <div class="divider"></div>
+            <p>This is an automated email. Please do not reply directly to this message.</p>
+            <p>If you need assistance, contact us at info@yourcompany.com</p>
+        </div>
+    </div>
+</body>
+</html>
