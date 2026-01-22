@@ -32,6 +32,8 @@ public class PaymentService {
     private final UserService userService;
     private final PayHereHashService payHereHashService;
     private final PayHereConfig payHereConfig;
+    private final InvoiceService invoiceService;
+    private final EmailService emailService;
 
     /**
      * Initiate payment for an order
@@ -169,6 +171,9 @@ public class PaymentService {
                 order.setStatus(OrderStatus.CONFIRMED);
                 orderRepository.save(order);
                 log.info("Order {} status updated to CONFIRMED after successful payment", order.getOrderNumber());
+
+                // Generate and send invoice email
+                sendInvoiceEmail(order);
             }
         }
 
@@ -291,5 +296,28 @@ public class PaymentService {
                 .createdAt(payment.getCreatedAt())
                 .completedAt(payment.getCompletedAt())
                 .build();
+    }
+
+    /**
+     * Generate and send invoice email to customer after successful payment
+     */
+    private void sendInvoiceEmail(Order order) {
+        try {
+            log.info("Generating invoice for order: {} after successful payment", order.getOrderNumber());
+            byte[] invoicePdf = invoiceService.generateInvoice(order);
+
+            String customerName = order.getUser().getBusinessName() != null ?
+                    order.getUser().getBusinessName() : order.getUser().getUsername();
+
+            emailService.sendInvoiceEmail(
+                    order.getUser().getEmail(),
+                    customerName,
+                    order.getOrderNumber(),
+                    invoicePdf
+            );
+            log.info("Invoice email sent for order: {}", order.getOrderNumber());
+        } catch (Exception e) {
+            log.error("Failed to send invoice email for order: {}", order.getOrderNumber(), e);
+        }
     }
 }

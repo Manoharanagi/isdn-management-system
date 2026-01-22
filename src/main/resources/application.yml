@@ -107,3 +107,36 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+
+# PayHere Payment Gateway Configuration
+payhere:
+  sandbox: true
+  merchant-id: 1223118
+  merchant-secret: Nzc1OTgyMTQ5MTM3ODQ3NDA3NTMwMjQ3MTU2NjgyMzg3OTY2NjM0
+  #notify-url: http://localhost:8080/api/payments/notify
+  notify-url: https://elisa-hyperangelic-edmund.ngrok-free.dev/api/payments/notify
+  return-url: http://localhost:5173/payment/success
+  cancel-url: http://localhost:5173/payment/cancel
+  currency: LKR
+
+# Email Configuration
+spring.mail:
+  host: sandbox.smtp.mailtrap.io
+  port: 2525
+  username: 5928da5197cc2e
+  password: 97479643ec88dd
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+
+# Invoice Settings
+invoice:
+  company-name: "ISDN Plastics"
+  company-address: "Your Company Address"
+  company-phone: "+94 XX XXX XXXX"
+  company-email: "info@yourcompany.com"
+  logo-path: classpath:static/images/logo.png
+

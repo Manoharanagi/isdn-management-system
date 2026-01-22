@@ -4,13 +4,17 @@ import com.isdn.dto.request.OrderRequest;
 import com.isdn.dto.request.UpdateOrderStatusRequest;
 import com.isdn.dto.response.ApiResponse;
 import com.isdn.dto.response.OrderResponse;
+import com.isdn.model.Order;
 import com.isdn.model.OrderStatus;
 import com.isdn.model.User;
+import com.isdn.service.InvoiceService;
 import com.isdn.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,7 +31,9 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final InvoiceService invoiceService;
     private final com.isdn.repository.UserRepository userRepository;
+    private final com.isdn.repository.OrderRepository orderRepository;
 
     /**
      * POST /api/orders - Place order from cart
@@ -145,6 +151,70 @@ public class OrderController {
         log.info("GET /api/orders/rdc/{} - Fetch orders for RDC", rdcId);
         List<OrderResponse> orders = orderService.getOrdersByRdc(rdcId);
         return ResponseEntity.ok(orders);
+    }
+
+    /**
+     * GET /api/orders/{orderId}/invoice - Download invoice PDF
+     */
+    @GetMapping("/{orderId}/invoice")
+    public ResponseEntity<byte[]> downloadInvoice(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("GET /api/orders/{}/invoice - Download invoice", orderId);
+
+        Long userId = getUserId(userDetails);
+
+        // Get order and verify ownership
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Check if user owns the order or has staff/admin role
+        boolean isOwner = order.getUser().getUserId().equals(userId);
+        boolean isStaff = userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_RDC_STAFF") ||
+                        auth.getAuthority().equals("ROLE_HO_MANAGER") ||
+                        auth.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isOwner && !isStaff) {
+            throw new RuntimeException("Access denied");
+        }
+
+        byte[] invoicePdf = invoiceService.generateInvoice(order);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "Invoice-" + order.getOrderNumber() + ".pdf");
+        headers.setContentLength(invoicePdf.length);
+
+        return new ResponseEntity<>(invoicePdf, headers, HttpStatus.OK);
+    }
+
+    /**
+     * POST /api/orders/{orderId}/resend-invoice - Resend invoice email
+     */
+    @PostMapping("/{orderId}/resend-invoice")
+    @PreAuthorize("hasAnyRole('RDC_STAFF', 'HO_MANAGER', 'ADMIN')")
+    public ResponseEntity<ApiResponse> resendInvoice(@PathVariable Long orderId) {
+        log.info("POST /api/orders/{}/resend-invoice - Resend invoice email", orderId);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Only resend for CONFIRMED or later status orders
+        if (order.getStatus() == OrderStatus.PENDING) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.builder()
+                            .success(false)
+                            .message("Cannot resend invoice for PENDING orders")
+                            .build());
+        }
+
+        orderService.sendInvoiceEmail(order);
+
+        return ResponseEntity.ok(ApiResponse.builder()
+                .success(true)
+                .message("Invoice email sent successfully")
+                .build());
     }
 
     /**

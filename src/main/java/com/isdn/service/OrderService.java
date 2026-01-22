@@ -27,6 +27,8 @@ public class OrderService {
     private final InventoryRepository inventoryRepository;
     private final RDCRepository rdcRepository;
     private final UserService userService;
+    private final InvoiceService invoiceService;
+    private final EmailService emailService;
 
     /**
      * Place order from cart
@@ -213,8 +215,34 @@ public class OrderService {
         order.setStatus(OrderStatus.CONFIRMED);
         orderRepository.save(order);
 
+        // Generate and send invoice email
+        sendInvoiceEmail(order);
+
         log.info("Order {} confirmed successfully", orderId);
         return mapToResponse(order);
+    }
+
+    /**
+     * Generate and send invoice email to customer
+     */
+    public void sendInvoiceEmail(Order order) {
+        try {
+            log.info("Generating invoice for order: {}", order.getOrderNumber());
+            byte[] invoicePdf = invoiceService.generateInvoice(order);
+
+            String customerName = order.getUser().getBusinessName() != null ?
+                    order.getUser().getBusinessName() : order.getUser().getUsername();
+
+            emailService.sendInvoiceEmail(
+                    order.getUser().getEmail(),
+                    customerName,
+                    order.getOrderNumber(),
+                    invoicePdf
+            );
+            log.info("Invoice email sent for order: {}", order.getOrderNumber());
+        } catch (Exception e) {
+            log.error("Failed to send invoice email for order: {}", order.getOrderNumber(), e);
+        }
     }
 
     /**

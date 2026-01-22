@@ -64,6 +64,9 @@ public class SecurityConfig {
                         // PayHere webhook endpoint - must be public for PayHere to call
                         .requestMatchers("/api/payments/notify").permitAll()
 
+                        .requestMatchers("/api/payments/notify").permitAll()
+
+
                         // Product endpoints - accessible to all authenticated users
                         .requestMatchers("/api/products/**").authenticated()
 
